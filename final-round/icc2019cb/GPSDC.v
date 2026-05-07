@@ -392,22 +392,32 @@ always @(posedge clk or negedge reset_n) begin
         case(state)
         IDLE0: begin 
             Valid <= 1'b0;
-            if (DEN) begin
+        end
+
+        FINDCOSA: begin//findcos cycle
+            Valid <= 1'b0;
+            
+            case(flag)
+            
+            1'b0: begin
+        
                 phi_a <= LAT_IN;
                 lambda_a <= LON_IN;
 
                 COS_INPUT <= LAT_IN;  //LAT_IN go inside findcos
                 cos_find_start <= 1'b1;
+                
+                flag <= flag +1;
             end
-        end
-
-        FINDCOSA: begin//findcos cycle
-            Valid <= 1'b0;
-            cos_find_start <= 1'b0;
-
-            if (cos_done) begin
-                cos_phi_a <= COS_FOUND;
+            
+            1'b1: begin
+                cos_find_start <= 1'b0;
+                if (cos_done) begin
+                    cos_phi_a <= COS_FOUND;
+                end
             end
+            endcase
+            
         end
 
         IDLE: begin
