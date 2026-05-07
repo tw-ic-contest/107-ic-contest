@@ -59,6 +59,7 @@ endmodule
 
 module CosInterpolate (
     input wire clk, 
+    input wire reset, 
     input wire start,
     output reg done,  
 
@@ -106,37 +107,43 @@ module CosInterpolate (
     end
     `endif
 
-    always @(posedge clk) begin
-        if (state_r == S_IDLE) begin
-            input_value_r <= input_value;
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state_r <= S_IDLE;
             curr_r <= 7'b1000000;
             bit_r <= 7'b1000000;
-        end else if (state_r == S_SEARCH) begin
-            // binary serach
-            curr_r <= (input_value < cos_chart_value[95:48]) ? ((curr_r ^ bit_r) | (bit_r >> 1)) : (curr_r | (bit_r >> 1));
-            bit_r <= bit_r >> 1;
-        end else if (state_r == S_STORE_LEFT) begin
-            left_point_r <= cos_chart_value;
-            curr_r <= curr_r + 1;
-        end else if (state_r == S_MUL_A) begin
-            // interpolate
-            // y0 * (x1 - x0)
-            mul_in1_r <= 65'(signed'(left_point_r[47:0]));
-            mul_in2_r <= 65'(signed'(cos_chart_value[95:48] - left_point_r[95:48]));
-            right_point_r <= cos_chart_value;
-        end else if (state_r == S_MUL_B) begin
-            mul_out1_r <= mul_out;
-            // (x - x0) * (y1 - y0)
-            mul_in1_r <= 65'(signed'(input_value - left_point_r[47:0]));
-            mul_in2_r <= 65'(signed'(right_point_r[95:48] - left_point_r[95:48]));
-        end else if (state_r == S_DIV) begin
-            div_num_r <= 128'(signed'(mul_out1_r + mul_out));
-            div_den_r <= 128'(signed'(right_point_r[47:0] - left_point_r[47:0]));
-            div_start_r <= 1'b1;
-        end else if (state_r == S_DIV_WAIT) begin
-            div_start_r <= 1'b0;
+        end else begin
+            if (state_r == S_IDLE) begin
+                input_value_r <= input_value;
+                curr_r <= 7'b1000000;
+                bit_r <= 7'b1000000;
+            end else if (state_r == S_SEARCH) begin
+                // binary serach
+                curr_r <= (input_value < cos_chart_value[95:48]) ? ((curr_r ^ bit_r) | (bit_r >> 1)) : (curr_r | (bit_r >> 1));
+                bit_r <= bit_r >> 1;
+            end else if (state_r == S_STORE_LEFT) begin
+                left_point_r <= cos_chart_value;
+                curr_r <= curr_r + 1;
+            end else if (state_r == S_MUL_A) begin
+                // interpolate
+                // y0 * (x1 - x0)
+                mul_in1_r <= 65'(signed'(left_point_r[47:0]));
+                mul_in2_r <= 65'(signed'(cos_chart_value[95:48] - left_point_r[95:48]));
+                right_point_r <= cos_chart_value;
+            end else if (state_r == S_MUL_B) begin
+                mul_out1_r <= mul_out;
+                // (x - x0) * (y1 - y0)
+                mul_in1_r <= 65'(signed'(input_value - left_point_r[47:0]));
+                mul_in2_r <= 65'(signed'(right_point_r[95:48] - left_point_r[95:48]));
+            end else if (state_r == S_DIV) begin
+                div_num_r <= 128'(signed'(mul_out1_r + mul_out));
+                div_den_r <= 128'(signed'(right_point_r[47:0] - left_point_r[47:0]));
+                div_start_r <= 1'b1;
+            end else if (state_r == S_DIV_WAIT) begin
+                div_start_r <= 1'b0;
+            end
+            state_r <= next_state_r;
         end
-        state_r <= next_state_r;
     end
     
     always @(*) begin
@@ -347,7 +354,7 @@ reg [64:0] mul_b_main;
 CosInterpolate _cos(.clk(clk), .start(cos_find_start), .done(cos_done),  
     .mul_in1(mul_a_cos), .mul_in2(mul_b_cos), .mul_out(mul_o),
     .cos_chart_address(COS_ADDR), .cos_chart_value(COS_DATA), 
-    .input_value(COS_INPUT), .cos_interpolate_value(COS_FOUND)
+    .input_value(COS_INPUT), .cos_interpolate_value(COS_FOUND), .reset(reset_n)
 );
 
 AsinInterpolate _asin(.clk(clk), .start(asin_find_start), .done(asin_done),  
