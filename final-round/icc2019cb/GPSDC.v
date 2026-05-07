@@ -98,7 +98,7 @@ module CosInterpolate (
 
     `ifdef DEBUG
     always @(posedge clk) begin
-        if (state != S_IDLE) begin
+        if (state_r != S_IDLE) begin
             $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value_r=%f left_point_r=%f right_point_r%f",
                 $time, state_r, next_state_r, 
                 curr_r, bit_r, 
