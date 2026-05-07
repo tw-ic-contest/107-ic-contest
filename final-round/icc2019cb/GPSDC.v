@@ -109,30 +109,20 @@ module CosInterpolate (
     end
     `endif
 
-    `ifdef DEBUG
+    /*`ifdef DEBUG
     always @(posedge clk) begin
         $strobe("DIV t=%0t state=%0d div_start=%b div_done=%b count=%0d den=%0d num=%0d",
             $time, state_r, div_start_r, div_done,
             div.count, div_den_r, div_num_r
         );
     end
-    `endif
-    
+    `endif*/
+
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             state_r <= S_IDLE;
             curr_r <= 7'b1000000;
             bit_r <= 7'b1000000;
-
-            // div_rst_r <= 1'b1;
-            // div_start_r <= 1'b0;
-            // div_num_r <= 48'd0;
-            // div_den_r <= 48'd0;
-
-            // mul_in1_r <= 65'd0;
-            // mul_in2_r <= 65'd0;
-            // left_point_r <= 96'd0;
-            // right_point_r <= 96'd0;
         end else begin
             if (state_r == S_IDLE) begin
                 input_value_r <= input_value;
@@ -193,6 +183,7 @@ endmodule
 module AsinInterpolate (
     input wire clk, 
     input wire start,
+    input wire reset, 
     output reg done,  
 
     output reg [64:0]mul_in1, 
@@ -223,10 +214,10 @@ module AsinInterpolate (
     reg [127:0] left_point_r, right_point_r;
 
     reg div_rst_r, div_start_r;
-    reg [63:0]div_num_r, div_den_r;
-    wire [63:0]div_quo;
+    reg [128:0]div_num_r, div_den_r;
+    wire [128:0]div_quo;
     wire div_done;
-    SeqDiv _div(.clk(clk), .rst(div_rst_r), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
+    SeqDiv _div(.clk(clk), .rst(reset), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
 
     always @(posedge clk) begin
         if (state_r == S_IDLE) begin
@@ -252,8 +243,8 @@ module AsinInterpolate (
             mul_in1_r <= 65'(signed'(input_value - left_point_r[63:0]));
             mul_in2_r <= 65'(signed'(right_point_r[127:64] - left_point_r[127:64]));
         end else if (state_r == S_DIV) begin
-            div_num_r <= 128'(signed'(mul_out1_r + mul_out));
-            div_den_r <= 128'(signed'(right_point_r[63:0] - left_point_r[63:0]));
+            div_num_r <= 128'(signed'(right_point_r[63:0] - left_point_r[63:0]));
+            div_den_r <= 128'(signed'(mul_out1_r + mul_out));
             div_start_r <= 1'b1;
         end else if (state_r == S_DIV_WAIT) begin
             div_start_r <= 1'b0;
@@ -381,7 +372,7 @@ CosInterpolate _cos(.clk(clk), .start(cos_find_start), .done(cos_done),
 AsinInterpolate _asin(.clk(clk), .start(asin_find_start), .done(asin_done),  
     .mul_in1(mul_a_asin), .mul_in2(mul_b_asin), .mul_out(mul_o),
     .asin_chart_address(ASIN_ADDR), .asin_chart_value(ASIN_DATA), 
-    .input_value(ASIN_INPUT), .asin_interpolate_value(ASIN_FOUND)
+    .input_value(ASIN_INPUT), .asin_interpolate_value(ASIN_FOUND), .reset(~reset_n)
 );
 
 always @(*) begin
