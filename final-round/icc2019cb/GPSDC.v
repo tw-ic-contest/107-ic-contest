@@ -352,7 +352,7 @@ wire signed [40:0] dif_lambda_rad_div2;
 reg [80:0] sinsquare_phi; //16.64
 reg [80:0] sinsquare_lambda;
 
-reg [160:0] RHS;
+reg [64:0] RHS;
 
 reg [63:0] asin_a;
 
@@ -364,7 +364,7 @@ assign dif_lambda = $signed({1'b0, lambda_b}) - $signed({1'b0, lambda_a});
 assign dif_phi_rad_div2 = dif_phi_rad >>> 1; //Q8.32
 assign dif_lambda_rad_div2 = dif_lambda_rad >>> 1;
 
-assign a = sinsquare_phi[63:0] + RHS[95:32];//Q16.64 + Q0.96
+assign a = sinsquare_phi[63:0] + RHS[63:0];//Q16.64 + Q0.96
 
 reg [2:0] step;
 
@@ -523,12 +523,12 @@ always @(posedge clk or negedge reset_n) begin
             3'd1:begin
                 $display("cosphia * cosphib = %.18f", $itor($signed(mul_o[64:0])) / 18446744073709551616.0);
                 mul_a_main <= mul_o[64:0]; // Q0.64
-                mul_b_main <= 65'(signed'(sinsquare_lambda)); //Q16.32
+                mul_b_main <= 65'(signed'(sinsquare_lambda)); //Q16.64
                 step <= step + 1;
             end
             3'd2:begin
-                $display("cosphia * cosphib * sinsquare_lambda = %.18f", $itor($signed(mul_o[64:0])) / 18446744073709551616.0 / 4294967296.0);
-                RHS <= mul_o[96:0]; // Q0.96
+                $display("cosphia * cosphib * sinsquare_lambda = %.18f", $itor($signed(mul_o[128:64])) / 18446744073709551616.0 / 4294967296.0);
+                RHS <= mul_o[128:64]; // Q0.128 -> Q0.64
                 step <= 3'd0;
             end
             endcase
