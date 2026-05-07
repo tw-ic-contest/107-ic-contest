@@ -1,6 +1,8 @@
+sh mkdir -p Report
+set DESIGN "GPSDC"
 #Read All Files
-read_file -format sverilog GPSDC.v
-#read_file -format sverilog  geofence.v
+read_file -format verilog  GPSDC.v
+#read_file -format sverilog  GPSDC.v
 current_design GPSDC
 link
 
@@ -17,8 +19,17 @@ set_fix_multiple_port_nets -all -buffer_constants [get_designs *]
 compile
 
 write -format ddc     -hierarchy -output "GPSDC_syn.ddc"
-write_sdf -version 1.0  GPSDC_syn.sdf
+write_sdf -version 1.0  geofence_syn.sdf
 write -format verilog -hierarchy -output GPSDC_syn.v
-report_area > area.log
-report_timing > timing.log
-report_qor   >  GPSDC_syn.qor
+#report_area > area.log
+#report_timing > timing.log
+#report_qor   >  geofence_syn.qor
+
+# Report Output
+current_design [get_designs ${DESIGN}]
+report_timing -delay min -max_paths 10 > "./Report/${DESIGN}_syn.timing_min"
+report_timing -delay max -max_paths 10 > "./Report/${DESIGN}_syn.timing_max"
+report_area -hierarchy > "./Report/${DESIGN}_syn.area"
+report_clock_gating > "./Report/${DESIGN}_syn.cg"
+
+
