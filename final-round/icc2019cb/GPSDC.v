@@ -1,6 +1,15 @@
 // vcs -R -full64 -sverilog testbench.v GPSDC.v +access+r +vcs+fsdbon 
 // vcs -R -full64 -sverilog tb.sv geofence.v +access+r +vcs+fsdbon +define+SDF -v /cad/CBDK/CBDK_IC_Contest_v2.1/Verilog/tsmc13_neg.v +maxdelays
 
+`ifdef DEBUG
+always @(posedge clk) begin
+    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b flag=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b",
+            $time, state, nextstate, DEN, Valid, flag,
+            cos_find_start, cos_done,
+            asin_find_start, asin_done);
+end
+`endif
+
 module Multiply (
     input wire signed [64:0]a, // signed
     input wire signed [64:0]b, // signed
@@ -96,6 +105,18 @@ module CosInterpolate (
     wire div_done;
     SeqDiv div(.clk(clk), .rst(div_rst_r), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
 
+    `ifdef DEBUG
+    always @(posedge clk) begin
+        if (state != IDLE) begin
+            $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value_r=%f left_point_r=%f right_point_r%f",
+                $time, state_r, next_state_r, 
+                curr_r, bit_r, 
+                $itor(input_value_r) / 65536.0, $itor(left_point_r) / 65536.0, $itor(right_point_r) / 65536.0
+            );
+        end
+    end
+    `endif
+
     always @(posedge clk) begin
         if (state_r == S_IDLE) begin
             input_value_r <= input_value;
@@ -128,6 +149,7 @@ module CosInterpolate (
         end
         state_r <= next_state_r;
     end
+    
     always @(*) begin
         next_state_r = state_r;
         case (state_r) 
@@ -270,11 +292,12 @@ reg [2:0] nextstate;
 localparam IDLE0 = 3'd0;
 localparam FINDCOSA = 3'd1;
 localparam IDLE = 3'd2;
-localparam FINDCOSB = 3'd3;
-localparam FINDA = 3'd4;
-localparam FINDASIN = 3'd5;
-localparam FINDD = 3'd6;
-localparam OUTPUT = 3'd7;
+localparam FINDCOSB1 = 3'd3;
+localparam FINDCOSB2 = 3'd8;
+localparam FINDA = 3'd5;
+localparam FINDASIN = 3'd6;
+localparam FINDD = 3'd7;
+localparam OUTPUT = 3'd8;
 
 reg [23:0] phi_a;
 reg [23:0] phi_b;
@@ -345,7 +368,7 @@ AsinInterpolate _asin(.clk(clk), .start(asin_find_start), .done(asin_done),
 );
 
 always @(*) begin
-    if (state == FINDCOSA || state == FINDCOSB) begin
+    if (state == FINDCOSA || state == FINDCOSB2) begin
         mul_a = mul_a_cos;
         mul_b = mul_b_cos;
     end else if (state == FINDASIN) begin
@@ -358,7 +381,7 @@ always @(*) begin
 end
 
 always @(posedge clk or negedge reset_n) begin
-
+    
     if(!reset_n) begin
         state <= IDLE0;
         Valid <= 1'b0;
@@ -403,7 +426,7 @@ always @(posedge clk or negedge reset_n) begin
             end
         end
 
-        FINDCOSB: begin //max(4, findcos) cycle
+        FINDCOSB1: begin //max(4, findcos) cycle
             Valid <= 1'b0;
             cos_find_start <= 1'b0;
 
@@ -436,14 +459,18 @@ always @(posedge clk or negedge reset_n) begin
                 sinsquare_lambda <= mul_o;
             end
             endcase
+        end
 
+        FINDCOSB2: begin
+            Valid <= 1'b0;
+        
             if (cos_done) begin
                 cos_phi_b <= COS_FOUND;
                 flag <= 3'd0;
             end
         end
 
-        FINDA: begin//2 cycle
+        FINDA: begin//3 cycle
             Valid <= 1'b0;
 
             case(flag)
@@ -475,6 +502,7 @@ always @(posedge clk or negedge reset_n) begin
                 flag <= 3'd0;
             end
         end
+        
         FINDD: begin//2 cycle
             Valid <= 1'b0;
 
@@ -525,11 +553,18 @@ always @(*) begin
             else
                 nextstate = IDLE;
         end
-        FINDCOSB: begin
-            if (flag == 3'd4 && cos_done)
+        FINDCOSB1: begin
+            if (flag == 3'd4)
+                nextstate = FINDCOSB2;
+            else
+                nextstate = FINDCOSB1;
+        end
+        FINDCOSB2: begin
+            if (cos_done)
                 nextstate = FINDA;
             else
-                nextstate = FINDCOSB;
+                nextstate = FINDCOSB2;
+        
         end
         FINDA: begin
             if (flag == 3'd2)
@@ -561,3 +596,12 @@ always @(*) begin
 end
 
 endmodule
+
+`ifdef DEBUG
+always @(posedge clk) begin
+    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b flag=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f",
+            $time, state, nextstate, DEN, Valid, flag,
+            cos_find_start, cos_done,
+            asin_find_start, asin_done, mul_a, mul_b);
+end
+`endif
