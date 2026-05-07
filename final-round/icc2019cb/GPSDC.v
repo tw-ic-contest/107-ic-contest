@@ -498,7 +498,6 @@ always @(posedge clk or negedge reset_n) begin
             phi_a <= phi_b;
             lambda_a <= lambda_b;
             cos_phi_a <= cos_phi_b;
-            cos_lambda_a <= cos_lambda_b;
         end
         endcase
     end
