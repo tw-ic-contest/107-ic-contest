@@ -496,6 +496,7 @@ always @(posedge clk or negedge reset_n) begin
             end
             3'd2:begin
                 RHS <= mul_o;
+                flag <= 1'b0;
             end
             endcase
         end
@@ -503,13 +504,26 @@ always @(posedge clk or negedge reset_n) begin
         FINDASIN: begin//findasin cycle
             Valid <= 1'b0;
 
-            ASIN_INPUT <= a;
-            asin_find_start <= 1'b1;
+            case(flag)
 
-            if (asin_done) begin
-                asin_a <= ASIN_FOUND;
-                flag <= 3'd0;
+            1'b0: begin
+                ASIN_INPUT <= a;
+                asin_find_start <= 1'b1;
+                flag <= flag + 1;
             end
+
+            1'b1: begin    
+
+                asin_find_start <= 1'b0;
+                
+                if (asin_done) begin
+                    asin_a <= ASIN_FOUND;
+                    flag <= 3'd0;
+                end
+            end
+
+            endcase
+
         end
         
         FINDD: begin//2 cycle
