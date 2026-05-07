@@ -99,14 +99,17 @@ module CosInterpolate (
 
     `ifdef DEBUG
     always @(posedge clk) begin
-        $strobe("CosInterpolate [%0t] state=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
-            $time, state_r, 
-            curr_r, bit_r, 
-            $itor(input_value_r) / 65536.0, 
-            $itor(cos_chart_value[95:48]) / 4294967296.0, 
-            $itor(left_point_r[95:48]) / 4294967296.0, $itor(left_point_r[47:0]) / 4294967296.0, 
-            $itor(right_point_r[95:48]) / 4294967296.0, $itor(right_point_r[47:0]) / 4294967296.0
-        );
+        if (state_r != S_IDLE) begin
+            $strobe("-----Start Finding Cos-----");
+            $strobe("CosInterpolate [%0t] state=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
+                $time, state_r, 
+                curr_r, bit_r, 
+                $itor(input_value_r) / 65536.0, 
+                $itor(cos_chart_value[95:48]) / 4294967296.0, 
+                $itor(left_point_r[95:48]) / 4294967296.0, $itor(left_point_r[47:0]) / 4294967296.0, 
+                $itor(right_point_r[95:48]) / 4294967296.0, $itor(right_point_r[47:0]) / 4294967296.0
+            );
+        end
     end
     `endif
 
@@ -166,6 +169,11 @@ module CosInterpolate (
                 `endif
             end else if (state_r == S_DIV_WAIT) begin
                 div_start_r <= 1'b0;
+            end else if (state_r == S_DONE) begin
+                `ifdef DEBUG
+                $strobe("cos_interpolate_value=%.9f", $itor($signed(cos_interpolate_value)) / 4294967296.0);
+                $strobe("-----end finding cos-----")
+                `endif
             end
             state_r <= next_state_r;
         end
@@ -259,11 +267,11 @@ module AsinInterpolate (
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out;
                 // (x - x0) * (y1 - y0)
-                mul_in1_r <= 65'(signed'(input_value - left_point_r[127:64]));
-                mul_in2_r <= 65'(signed'(right_point_r[63:0] - left_point_r[63:0]));
+                mul_in1_r <= 65'(signed'(input_value)) - 65'(signed'(left_point_r[127:64]));
+                mul_in2_r <= 65'(signed'(right_point_r[63:0])) - 65'(signed'(left_point_r[63:0]));
             end else if (state_r == S_DIV) begin
-                div_num_r <= 128'(signed'(right_point_r[63:0] - left_point_r[63:0]));
-                div_den_r <= 128'(signed'(mul_out1_r + mul_out));
+                div_num_r <= 128'(signed'(mul_out1_r)) + 128'(signed'(mul_out));
+                div_den_r <= 128'(signed'(right_point_r[63:0])) - 128'(signed'(left_point_r[63:0]));
                 div_start_r <= 1'b1;
             end else if (state_r == S_DIV_WAIT) begin
                 div_start_r <= 1'b0;
@@ -439,9 +447,6 @@ always @(posedge clk or negedge reset_n) begin
             cos_find_start <= 1'b0;
             if (cos_done) begin
                 cos_phi_a <= COS_FOUND;
-                `ifdef DEBUG
-                $strobe("COS_FOUND=%.9f", $itor($signed(COS_FOUND)) / 4294967296.0);
-                `endif
             end
         end
 
@@ -652,6 +657,12 @@ always @(posedge clk) begin
                 asin_find_start, asin_done, mul_a, mul_b, 
                 $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0
         );
+
+        $strobe("[%0t] cos_phi_a=%.9f cos_phi_b=%.9f sinsquare_phi=%.9f sinsquare_lambda=%.9f a=%.18f D=%.9f"
+                $time, $itor($signed(cos_phi_a))/4294967296.0, $itor($signed(cos_phi_b))/4294967296.0,
+                $itor($signed(sinsquare_phi))/4294967296.0, $itor($signed(sinsquare_lambda))/4294967296.0,
+                $itor($signed(a))/18446744073709551616.0,  $itor($signed(D))/4294967296.0
+        );        
     end
 end
 `endif
