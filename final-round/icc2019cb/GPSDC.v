@@ -605,11 +605,11 @@ end
 
 `ifdef DEBUG
 always @(posedge clk) begin
-    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b flag=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f",
+    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b flag=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f",
             $time, state, nextstate, DEN, Valid, flag,
             cos_find_start, cos_done,
             asin_find_start, asin_done, mul_a, mul_b, 
-            $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0
+            $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0
     );
 end
 
