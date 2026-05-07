@@ -99,7 +99,7 @@ module CosInterpolate (
 
     `ifdef DEBUG
     always @(posedge clk) begin
-        if (state_r != S_IDLE) begin
+        if (state_r != S_IDLE && state_r != DIV_WAIT) begin
             $strobe("CosInterpolate [%0t] state=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
                 $time, state_r, 
                 curr_r, bit_r, 
@@ -261,9 +261,6 @@ module AsinInterpolate (
                 // y0 * (x1 - x0)
                 mul_in1_r <= 65'(signed'(left_point_r[63:0]));
                 mul_in2_r <= 65'(signed'(asin_chart_value[127:64])) - 65'(signed'(left_point_r[127:64]));
-                `ifdef DEBUG
-                $strobe("x1-x0=%.18f", (65'(signed'(asin_chart_value[127:64])) - 65'(signed'(left_point_r[127:64]))) / 4294967296.0);
-                `endif
                 right_point_r <= asin_chart_value;
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out;
