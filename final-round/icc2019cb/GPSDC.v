@@ -54,14 +54,6 @@ module SeqDiv (
             end
         end
     end
-    `ifdef DEBUG
-    always @(posedge clk) begin
-        $strobe("DIV t=%0t state=%0d div_start=%b div_done=%b count=%0d den=%0d num=%0d",
-            $time, state_r, div_start_r, div_done,
-            div.count, div_den_r, div_num_r
-        );
-    end
-    `endif
 endmodule
 
 
@@ -117,6 +109,15 @@ module CosInterpolate (
     end
     `endif
 
+    `ifdef DEBUG
+    always @(posedge clk) begin
+        $strobe("DIV t=%0t state=%0d div_start=%b div_done=%b count=%0d den=%0d num=%0d",
+            $time, state_r, div_start_r, div_done,
+            div.count, div_den_r, div_num_r
+        );
+    end
+    `endif
+    
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             state_r <= S_IDLE;
