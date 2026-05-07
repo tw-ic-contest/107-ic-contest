@@ -131,7 +131,7 @@ module CosInterpolate (
                 bit_r <= 7'b1000000;
             end else if (state_r == S_SEARCH) begin
                 // binary serach
-                curr_r <= (input_value < cos_chart_value[95:48]) ? ((curr_r ^ bit_r) | (bit_r >> 1)) : (curr_r | (bit_r >> 1));
+                curr_r <= ((input_value <<< 16) < cos_chart_value[95:48]) ? ((curr_r ^ bit_r) | (bit_r >> 1)) : (curr_r | (bit_r >> 1));
                 bit_r <= bit_r >> 1;
             end else if (state_r == S_STORE_LEFT) begin
                 left_point_r <= cos_chart_value;
