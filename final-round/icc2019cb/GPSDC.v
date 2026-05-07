@@ -345,14 +345,14 @@ reg [47:0] cos_phi_mul;
 wire signed [24:0] dif_phi;
 wire signed [24:0] dif_lambda;
 
-reg signed [24:0] dif_phi_rad;
-reg signed [24:0] dif_lambda_rad;
-wire signed [24:0] dif_phi_rad_div2;
-wire signed [24:0] dif_lambda_rad_div2;
-reg [47:0] sinsquare_phi;
-reg [47:0] sinsquare_lambda;
+reg signed [40:0] dif_phi_rad; //8.16*0.16
+reg signed [40:0] dif_lambda_rad;
+wire signed [40:0] dif_phi_rad_div2; //8.16*8.16
+wire signed [40:0] dif_lambda_rad_div2;
+reg [80:0] sinsquare_phi; //16.64
+reg [80:0] sinsquare_lambda;
 
-reg [47:0] RHS;
+reg [:0] RHS;
 
 reg [63:0] asin_a;
 
@@ -361,7 +361,7 @@ reg [63:0] asin_a;
 assign dif_phi = $signed({1'b0, phi_b}) - $signed({1'b0, phi_a});
 assign dif_lambda = $signed({1'b0, lambda_b}) - $signed({1'b0, lambda_a});
 
-assign dif_phi_rad_div2 = dif_phi_rad >>> 1;
+assign dif_phi_rad_div2 = dif_phi_rad >>> 1; //Q8.32
 assign dif_lambda_rad_div2 = dif_lambda_rad >>> 1;
 
 assign a = sinsquare_phi + RHS;
@@ -472,30 +472,30 @@ always @(posedge clk or negedge reset_n) begin
             case(step)
             
             3'd0: begin
-                mul_a_main <= dif_phi;
-                mul_b_main <= rad;
+                mul_a_main <= 65'(signed'(dif_phi)); //Q8.16
+                mul_b_main <= 65'(signed'(rad)); //Q0.16
                 step <= step + 1;                
             end
             3'd1: begin
-                dif_phi_rad <= mul_o;
-                mul_a_main <= dif_lambda;
-                mul_b_main <= rad;
+                dif_phi_rad <= mul_o[40:0]; //Q8.32
+                mul_a_main <= 65'(signed'(dif_lambda)); //Q8.16
+                mul_b_main <= 65'(signed'(rad)); //Q0.16
                 step <= step + 1;
             end
             3'd2: begin
-                dif_lambda_rad <= mul_o;
-                mul_a_main <= dif_phi_rad_div2;
-                mul_b_main <= dif_phi_rad_div2;
+                dif_lambda_rad <= mul_o[40:0]; // Q8.32
+                mul_a_main <= 65'(signed'(dif_phi_rad_div2)); // Q8.32
+                mul_b_main <= 65'(signed'(dif_phi_rad_div2)); // Q8.32
                 step <= step + 1;
             end
             3'd3: begin
-                sinsquare_phi <= mul_o;
-                mul_a_main <= dif_lambda_rad_div2;
-                mul_b_main <= dif_lambda_rad_div2;
+                sinsquare_phi <= mul_o[80:0]; // Q16.64
+                mul_a_main <= 65'(signed'(dif_lambda_rad_div2));
+                mul_b_main <= 65'(signed'(dif_lambda_rad_div2));
                 step <= step + 1;              
             end       
             3'd4: begin
-                sinsquare_lambda <= mul_o;
+                sinsquare_lambda <= mul_o[40:0]; // Q8.32
             end
             endcase
         end
@@ -663,7 +663,7 @@ always @(posedge clk) begin
 
         $strobe("[%0t] cos_phi_a=%.9f cos_phi_b=%.9f sinsquare_phi=%.9f sinsquare_lambda=%.9f a=%.18f D=%.9f",
                 $time, $itor($signed(cos_phi_a))/4294967296.0, $itor($signed(cos_phi_b))/4294967296.0,
-                $itor($signed(sinsquare_phi))/4294967296.0, $itor($signed(sinsquare_lambda))/4294967296.0,
+                $itor($signed(sinsquare_phi))/18446744073709551616.0, $itor($signed(sinsquare_lambda))/18446744073709551616.0,
                 $itor($signed(a))/18446744073709551616.0,  $itor($signed(D))/4294967296.0
         );        
     end
