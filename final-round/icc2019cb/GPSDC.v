@@ -1,15 +1,6 @@
 // vcs -R -full64 -sverilog testbench.v GPSDC.v +access+r +vcs+fsdbon 
 // vcs -R -full64 -sverilog tb.sv geofence.v +access+r +vcs+fsdbon +define+SDF -v /cad/CBDK/CBDK_IC_Contest_v2.1/Verilog/tsmc13_neg.v +maxdelays
 
-`ifdef DEBUG
-always @(posedge clk) begin
-    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b flag=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b",
-            $time, state, nextstate, DEN, Valid, flag,
-            cos_find_start, cos_done,
-            asin_find_start, asin_done);
-end
-`endif
-
 module Multiply (
     input wire signed [64:0]a, // signed
     input wire signed [64:0]b, // signed
