@@ -340,7 +340,7 @@ assign dif_lambda_rad_div2 = dif_lambda_rad >>> 1;
 
 assign a = sinsquare_phi + RHS;
 
-reg [2:0] flag;
+reg [2:0] step;
 
 reg [64:0] mul_a;
 reg [64:0] mul_b;
@@ -395,7 +395,7 @@ always @(posedge clk or negedge reset_n) begin
         Valid <= 1'b0;
         cos_find_start <= 1'b0;
         asin_find_start <= 1'b0;
-        flag <= 3'd0;
+        step <= 3'd0;
         D <= 40'd0;
     end
     else begin
@@ -424,14 +424,14 @@ always @(posedge clk or negedge reset_n) begin
 
         IDLE: begin
             Valid <= 1'b0;
-            flag <= 1'b0;
+            step <= 3'd0;
 
             if (DEN) begin
                 phi_b <= LAT_IN;
                 lambda_b <= LON_IN;
                 COS_INPUT <= LAT_IN; //LAT_IN go inside findcos
                 cos_find_start <= 1'b1;
-                flag <= 3'd0;
+                step <= 3'd0;
             end
         end
 
@@ -439,30 +439,30 @@ always @(posedge clk or negedge reset_n) begin
             Valid <= 1'b0;
             cos_find_start <= 1'b0;
 
-            case(flag)
+            case(step)
             
             3'd0: begin
                 mul_a_main <= dif_phi;
                 mul_b_main <= rad;
-                flag <= flag + 1;                
+                step <= step + 1;                
             end
             3'd1: begin
                 dif_phi_rad <= mul_o;
                 mul_a_main <= dif_lambda;
                 mul_b_main <= rad;
-                flag <= flag + 1;
+                step <= step + 1;
             end
             3'd2: begin
                 dif_lambda_rad <= mul_o;
                 mul_a_main <= dif_phi_rad_div2;
                 mul_b_main <= dif_phi_rad_div2;
-                flag <= flag + 1;
+                step <= step + 1;
             end
             3'd3: begin
                 sinsquare_phi <= mul_o;
                 mul_a_main <= dif_lambda_rad_div2;
                 mul_b_main <= dif_lambda_rad_div2;
-                flag <= flag + 1;              
+                step <= step + 1;              
             end       
             3'd4: begin
                 sinsquare_lambda <= mul_o;
@@ -475,28 +475,28 @@ always @(posedge clk or negedge reset_n) begin
         
             if (cos_done) begin
                 cos_phi_b <= COS_FOUND;
-                flag <= 3'd0;
+                step <= 3'd0;
             end
         end
 
         FINDA: begin//3 cycle
             Valid <= 1'b0;
 
-            case(flag)
+            case(step)
 
             3'd0:begin
                 mul_a_main <= cos_phi_a;
                 mul_b_main <= cos_phi_b;
-                flag <= flag + 1;
+                step <= step + 1;
             end
             3'd1:begin
                 mul_a_main <= mul_o;
                 mul_b_main <= sinsquare_lambda;
-                flag <= flag + 1;
+                step <= step + 1;
             end
             3'd2:begin
                 RHS <= mul_o;
-                flag <= 1'b0;
+                step <= 3'd0;
             end
             endcase
         end
@@ -504,12 +504,12 @@ always @(posedge clk or negedge reset_n) begin
         FINDASIN: begin//findasin cycle
             Valid <= 1'b0;
 
-            case(flag)
+            case(step)
 
             1'b0: begin
                 ASIN_INPUT <= a;
                 asin_find_start <= 1'b1;
-                flag <= flag + 1;
+                step <= step + 1;
             end
 
             1'b1: begin    
@@ -518,7 +518,7 @@ always @(posedge clk or negedge reset_n) begin
                 
                 if (asin_done) begin
                     asin_a <= ASIN_FOUND;
-                    flag <= 3'd0;
+                    step <= 3'd0;
                 end
             end
 
@@ -529,12 +529,12 @@ always @(posedge clk or negedge reset_n) begin
         FINDD: begin//2 cycle
             Valid <= 1'b0;
 
-            case(flag)
+            case(step)
 
             3'd0: begin
                 mul_a_main <= asin_a;
                 mul_b_main <= R;
-                flag <= flag + 1;
+                step <= step + 1;
             end
             3'd1: begin
                 D <= mul_o;
@@ -544,7 +544,7 @@ always @(posedge clk or negedge reset_n) begin
 
         OUTPUT:begin
             Valid <= 1'b1;
-            flag <= 0;
+            step <= 3'd0;
             //swap b to a
             phi_a <= phi_b;
             lambda_a <= lambda_b;
@@ -577,7 +577,7 @@ always @(*) begin
                 nextstate = IDLE;
         end
         FINDCOSB1: begin
-            if (flag == 3'd4)
+            if (step == 3'd4)
                 nextstate = FINDCOSB2;
             else
                 nextstate = FINDCOSB1;
@@ -590,7 +590,7 @@ always @(*) begin
         
         end
         FINDA: begin
-            if (flag == 3'd2)
+            if (step == 3'd2)
                 nextstate = FINDASIN;
             else
                 nextstate = FINDA;
@@ -602,7 +602,7 @@ always @(*) begin
                 nextstate = FINDASIN;
         end
         FINDD: begin
-            if (flag == 3'd1)
+            if (step == 3'd1)
                 nextstate = OUTPUT;
             else
                 nextstate = FINDD; 
@@ -621,8 +621,8 @@ end
 
 `ifdef DEBUG
 always @(posedge clk) begin
-    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b flag=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f",
-            $time, state, nextstate, DEN, Valid, flag,
+    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b step=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f",
+            $time, state, nextstate, DEN, Valid, step,
             cos_find_start, cos_done,
             asin_find_start, asin_done, mul_a, mul_b, 
             $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0
