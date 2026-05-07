@@ -1,3 +1,6 @@
+// vcs -R -full64 -sverilog testbench.v GPSDC.v +access+r +vcs+fsdbon 
+// vcs -R -full64 -sverilog tb.sv geofence.v +access+r +vcs+fsdbon +define+SDF -v /cad/CBDK/CBDK_IC_Contest_v2.1/Verilog/tsmc13_neg.v +maxdelays
+
 module Multiply (
     input wire signed [64:0]a, // signed
     input wire signed [64:0]b, // signed
@@ -239,6 +242,8 @@ module AsinInterpolate (
     end
 endmodule
 
+
+
 `timescale 1ns/10ps
 module GPSDC(clk, reset_n, DEN, LON_IN, LAT_IN, COS_ADDR, COS_DATA, ASIN_ADDR, ASIN_DATA, Valid, a, D);
 
@@ -253,7 +258,7 @@ input      [127:0] ASIN_DATA; //0.64(x) + 0.64(arcsin(sqrt(x)))
 output     [5:0]   ASIN_ADDR;
 output             Valid;
 output reg [39:0]  D; //8.32
-output reg [63:0]  a; //0.64
+output     [63:0]  a; //0.64
 
 parameter rad = 16'h477; //0.16
 parameter R = 12756274;
@@ -340,25 +345,27 @@ always @(posedge clk or negedge reset_n) begin
         state <= nextstate;
         
         case(state)
-        IDLE0: 
+        IDLE0: begin 
             Valid <= 1'b0;
             if (DEN) begin
                 phi_a <= LAT_IN;
                 lambda_a <= LON_IN;
 
-                COS_INPUT <= LAT_INl  //LAT_IN go inside findcos
+                COS_INPUT <= LAT_IN;  //LAT_IN go inside findcos
                 cos_find_start <= 1'b1;
             end
-        
-        FINDCOSA: //findcos cycle
+        end
+
+        FINDCOSA: begin//findcos cycle
             Valid <= 1'b0;
             cos_find_start <= 1'b0;
 
             if (cos_done) begin
                 cos_phi_a <= COS_FOUND;
             end
-            
-        IDLE:
+        end
+
+        IDLE: begin
             Valid <= 1'b0;
 
             if (DEN) begin
@@ -368,67 +375,70 @@ always @(posedge clk or negedge reset_n) begin
                 cos_find_start <= 1'b1;
                 flag <= 3'd0;
             end
-    
-        FINDCOSB: //max(4, findcos) cycle
+        end
+
+        FINDCOSB: begin //max(4, findcos) cycle
             Valid <= 1'b0;
             cos_find_start <= 1'b0;
 
             case(flag)
             
-            3'd0:   
+            3'd0: begin  
                 mul_a <= dif_phi;
                 mul_b <= rad;
                 flag <= flag + 1;                
-
-            3'd1:
+            end
+            3'd1: begin
                 dif_phi_rad <= mul_o;
                 mul_a <= dif_lambda;
                 mul_b <= rad;
                 flag <= flag + 1;
-
-            3'd2:
+            end
+            3'd2: begin
                 dif_lambda_rad <= mul_o;
                 mul_a <= dif_phi_rad_div2;
                 mul_b <= dif_phi_rad_div2;
                 flag <= flag + 1;
-
-            3'd3:
+            end
+            3'd3: begin
                 sinsquare_phi <= mul_o;
                 mul_a <= dif_lambda_rad_div2;
                 mul_b <= dif_lambda_rad_div2;
                 flag <= flag + 1;              
-
-            3'd4:
+            end       
+            3'd4: begin
                 sinsquare_lambda <= mul_o;
-
+            end
             endcase
 
             if (cos_done) begin
                 cos_phi_b <= COS_FOUND;
                 flag <= 3'd0;
             end
-        
-        FINDA: //2 cycle
+        end
+
+        FINDA: begin//2 cycle
             Valid <= 1'b0;
 
             case(flag)
 
-            3'd0:
+            3'd0:begin
                 mul_a <= cos_phi_a;
                 mul_b <= cos_phi_b;
                 flag <= flag + 1;
-
-            3'd1:
+            end
+            3'd1:begin
                 mul_a <= mul_o;
                 mul_b <= sinsquare_lambda;
                 flag <= flag + 1;
-            
-            3'd2:
+            end
+            3'd2:begin
                 RHS <= mul_o;
-
+            end
             endcase
-            
-        FINDASIN: //findasin cycle
+        end
+
+        FINDASIN: begin//findasin cycle
             Valid <= 1'b0;
 
             ASIN_INPUT <= a;
@@ -438,25 +448,26 @@ always @(posedge clk or negedge reset_n) begin
                 asin_a <= ASIN_FOUND;
                 flag <= 3'd0;
             end
-
-        FINDD: //2 cycle
+        end
+        FINDD: begin//2 cycle
             Valid <= 1'b0;
 
             case(flag)
 
-            3'd0:
+            3'd0: begin
                 mul_a <= asin_a;
                 mul_b <= R;
                 flag <= flag + 1;
-
-            3'd1:
+            end
+            3'd1: begin
                 D <= mul_o;
-
+            end
             endcase
+        end
 
-        OUTPUT:
+        OUTPUT:begin
             Valid <= 1'b1;
-
+        end
         endcase
     end
 end
@@ -465,46 +476,55 @@ always @(*) begin
     nextstate = state;
     
     case (state)
-        IDLE0:
+        IDLE0: begin
             if (DEN)
                 nextstate = FINDCOSA;
             else
                 nextstate = IDLE0;
-        FINDCOSA:
+        end
+        FINDCOSA: begin
             if (cos_done)
                 nextstate = IDLE;
             else
                 nextstate = FINDCOSA;
-        IDLE:
+        end
+        IDLE: begin
             if (DEN)
                 nextstate = FINDCOSB;
             else
                 nextstate = IDLE;
-        FINDCOSB:
+        end
+        FINDCOSB: begin
             if (flag == 3'd4 && cos_done)
                 nextstate = FINDA;
             else
                 nextstate = FINDCOSB;
-        FINDA:
+        end
+        FINDA: begin
             if (flag == 3'd2)
                 nextstate = FINDASIN;
             else
                 nextstate = FINDA;
-        FINDASIN: 
+        end
+        FINDASIN:  begin
             if (asin_done)
                 nextstate = FINDD;
             else
                 nextstate = FINDASIN;
-        FINDD:
+        end
+        FINDD: begin
             if (flag == 3'd1)
                 nextstate = OUTPUT;
             else
                 nextstate = FINDD; 
-        OUTPUT:
+        end
+        OUTPUT: begin
             nextstate = IDLE;
+        end
         
-        default:
+        default: begin
             nextstate = IDLE0;
+        end
 
     endcase
 end
