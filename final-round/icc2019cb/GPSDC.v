@@ -97,7 +97,7 @@ module CosInterpolate (
     wire div_done;
     SeqDiv div(.clk(clk), .rst(reset), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
 
-    `ifdef DEBUG
+    `ifdef DEBUG_COS
     always @(posedge clk) begin
         if (state_r != S_IDLE && state_r != S_DIV_WAIT) begin
             $strobe("CosInterpolate [%0t] state=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
@@ -144,7 +144,7 @@ module CosInterpolate (
                 mul_in1_r <= 65'(signed'(left_point_r[47:0])); // Q16.32 -> Q32.32
                 mul_in2_r <= 65'(signed'(cos_chart_value[95:48])) - 65'(signed'(left_point_r[95:48])); // Q32.32
                 right_point_r <= cos_chart_value;
-                `ifdef DEBUG
+                `ifdef DEBUG_COS
                 $strobe("x1-x0=%.9f", (65'(signed'(cos_chart_value[95:48])) - 65'(signed'(left_point_r[95:48]))) / 4294967296.0);
                 `endif
             end else if (state_r == S_MUL_B) begin
@@ -152,7 +152,7 @@ module CosInterpolate (
                 // (x - x0) * (y1 - y0)
                 mul_in1_r <= 65'(signed'((input_value <<< 16))) - 65'(signed'(left_point_r[95:48])); // Q32.32
                 mul_in2_r <= 65'(signed'(right_point_r[47:0])) - 65'(signed'(left_point_r[47:0])); // Q32.32
-                `ifdef DEBUG
+                `ifdef DEBUG_COS
                 $strobe("y0(x1-x0)=%.18f", $itor($signed(mul_out1_r)) / 18446744073709551616.0);
                 $strobe("x-x0=%.9f", (65'(signed'((input_value <<< 16))) - 65'(signed'(left_point_r[95:48]))) / 4294967296.0);
                 $strobe("y1-y0=%.9f", (65'(signed'(right_point_r[47:0])) - 65'(signed'(left_point_r[47:0]))) / 4294967296.0);
@@ -161,7 +161,7 @@ module CosInterpolate (
                 div_den_r <= 128'(signed'(right_point_r[95:48])) - 128'(signed'(left_point_r[95:48]));
                 div_num_r <= 128'(signed'(mul_out1_r)) + 128'(signed'(mul_out));
                 div_start_r <= 1'b1;
-                `ifdef DEBUG
+                `ifdef DEBUG_COS
                 $strobe("y0(x1-x0)=%.18f", $itor($signed(mul_out)) / 18446744073709551616.0);
                 $strobe("x1-x0=%.9f", (128'(signed'(right_point_r[47:0])) - 128'(signed'(left_point_r[47:0]))) / 4294967296.0);
                 $strobe("y0(x1-x0)+(x-x0)(y1-y0)=%.9f", ((128'(signed'(mul_out1_r)) + 128'(signed'(mul_out))) >>> 32) / 4294967296.0);
@@ -169,7 +169,7 @@ module CosInterpolate (
             end else if (state_r == S_DIV_WAIT) begin
                 div_start_r <= 1'b0;
             end else if (state_r == S_DONE) begin
-                `ifdef DEBUG
+                `ifdef DEBUG_COS
                 $strobe("cos_interpolate_value=%.9f", $itor($signed(cos_interpolate_value)) / 4294967296.0);
                 `endif
             end
