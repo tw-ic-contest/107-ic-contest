@@ -311,9 +311,9 @@ assign a = sinsquare_phi + RHS;
 
 reg [2:0] flag;
 
-reg [63:0] mul_a;
-reg [63:0] mul_b;
-wire [63:0] mul_o;
+reg [64:0] mul_a;
+reg [64:0] mul_b;
+wire [128:0] mul_o;
 
 Multiply _mul(.a(mul_a), .b(mul_b), .o(mul_o));
 
@@ -323,17 +323,39 @@ reg [47:0] COS_INPUT, COS_FOUND;
 reg asin_find_start, asin_done;
 reg [63:0] ASIN_INPUT, ASIN_FOUND;
 
+wire [64:0] mul_a_cos;
+wire [64:0] mul_b_cos;
+
+wire [64:0] mul_a_asin;
+wire [64:0] mul_b_asin;
+
+wire [64:0] mul_a_main;
+wire [64:0] mul_b_main;
+
 CosInterpolate _cos(.clk(clk), .start(cos_find_start), .done(cos_done),  
-    .mul_in1(mul_a), .mul_in2(mul_b), .mul_out(mul_o),
+    .mul_in1(mul_a_cos), .mul_in2(mul_b_cos), .mul_out(mul_o),
     .cos_chart_address(COS_ADDR), .cos_chart_value(COS_DATA), 
     .input_value(COS_INPUT), .cos_interpolate_value(COS_FOUND)
 );
 
 AsinInterpolate _asin(.clk(clk), .start(asin_find_start), .done(asin_done),  
-    .mul_in1(mul_a), .mul_in2(mul_b), .mul_out(mul_o),
+    .mul_in1(mul_a_asin), .mul_in2(mul_b_asin), .mul_out(mul_o),
     .asin_chart_address(ASIN_ADDR), .asin_chart_value(ASIN_DATA), 
     .input_value(ASIN_INPUT), .asin_interpolate_value(ASIN_FOUND)
 );
+
+always @(*) begin
+    if (state == FINDCOSA || state == FINDCOSB) begin
+        mul_a = mul_a_cos;
+        mul_b = mul_b_cos;
+    end else if (state == FINDASIN) begin
+        mul_a = mul_a_asin;
+        mul_b = mul_b_asin;
+    end else begin
+        mul_a = mul_a_main;
+        mul_b = mul_b_main;
+    end
+end
 
 always @(posedge clk or negedge reset_n) begin
 
@@ -387,27 +409,27 @@ always @(posedge clk or negedge reset_n) begin
 
             case(flag)
             
-            3'd0: begin  
-                mul_a <= dif_phi;
-                mul_b <= rad;
+            3'd0: begin
+                mul_a_main <= dif_phi;
+                mul_b_main <= rad;
                 flag <= flag + 1;                
             end
             3'd1: begin
                 dif_phi_rad <= mul_o;
-                mul_a <= dif_lambda;
-                mul_b <= rad;
+                mul_a_main <= dif_lambda;
+                mul_b_main <= rad;
                 flag <= flag + 1;
             end
             3'd2: begin
                 dif_lambda_rad <= mul_o;
-                mul_a <= dif_phi_rad_div2;
-                mul_b <= dif_phi_rad_div2;
+                mul_a_main <= dif_phi_rad_div2;
+                mul_b_main <= dif_phi_rad_div2;
                 flag <= flag + 1;
             end
             3'd3: begin
                 sinsquare_phi <= mul_o;
-                mul_a <= dif_lambda_rad_div2;
-                mul_b <= dif_lambda_rad_div2;
+                mul_a_main <= dif_lambda_rad_div2;
+                mul_b_main <= dif_lambda_rad_div2;
                 flag <= flag + 1;              
             end       
             3'd4: begin
@@ -427,13 +449,13 @@ always @(posedge clk or negedge reset_n) begin
             case(flag)
 
             3'd0:begin
-                mul_a <= cos_phi_a;
-                mul_b <= cos_phi_b;
+                mul_a_main <= cos_phi_a;
+                mul_b_main <= cos_phi_b;
                 flag <= flag + 1;
             end
             3'd1:begin
-                mul_a <= mul_o;
-                mul_b <= sinsquare_lambda;
+                mul_a_main <= mul_o;
+                mul_b_main <= sinsquare_lambda;
                 flag <= flag + 1;
             end
             3'd2:begin
@@ -459,8 +481,8 @@ always @(posedge clk or negedge reset_n) begin
             case(flag)
 
             3'd0: begin
-                mul_a <= asin_a;
-                mul_b <= R;
+                mul_a_main <= asin_a;
+                mul_b_main <= R;
                 flag <= flag + 1;
             end
             3'd1: begin
@@ -472,6 +494,11 @@ always @(posedge clk or negedge reset_n) begin
         OUTPUT:begin
             Valid <= 1'b1;
             flag <= 0;
+            //swap b to a
+            phi_a <= phi_b;
+            lambda_a <= lambda_b;
+            cos_phi_a <= cos_phi_b;
+            cos_lambda_a <= cos_lambda_b;
         end
         endcase
     end
