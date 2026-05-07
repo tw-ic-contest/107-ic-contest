@@ -142,15 +142,20 @@ module CosInterpolate (
                 mul_in1_r <= 65'(signed'(left_point_r[47:0]));
                 mul_in2_r <= 65'(signed'(cos_chart_value[95:48] - left_point_r[95:48]));
                 right_point_r <= cos_chart_value;
+                $strobe("x1-x0=%f", (65'(signed'(cos_chart_value[95:48] - left_point_r[95:48]))) / 4294967296.0);
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out;
                 // (x - x0) * (y1 - y0)
                 mul_in1_r <= 65'(signed'(input_value - left_point_r[95:48]));
                 mul_in2_r <= 65'(signed'(right_point_r[47:0] - left_point_r[47:0]));
+                $strobe("x-x0=%f", (65'(signed'(input_value - left_point_r[95:48]))) / 4294967296.0);
+                $strobe("y1-y0=%f", (65'(signed'(right_point_r[47:0] - left_point_r[47:0]))) / 4294967296.0);
             end else if (state_r == S_DIV) begin
                 div_num_r <= 128'(signed'(right_point_r[47:0] - left_point_r[47:0]));
                 div_den_r <= 128'(signed'(mul_out1_r + mul_out));
                 div_start_r <= 1'b1;
+                $strobe("y0(x1-x0)+(x-x0)(y1-y0)=%f", 128'(signed'(right_point_r[47:0] - left_point_r[47:0])) / 4294967296.0);
+                $strobe("x1-x0=%f", 128'(signed'(mul_out1_r + mul_out)));
             end else if (state_r == S_DIV_WAIT) begin
                 div_start_r <= 1'b0;
             end
