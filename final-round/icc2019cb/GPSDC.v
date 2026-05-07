@@ -99,8 +99,9 @@ module CosInterpolate (
 
     `ifdef DEBUG
     always @(posedge clk) begin
-        $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
-            $time, state_r, next_state_r, 
+        $strobe("CosInterpolate [%0t] state=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
+            $time, state_r, 
+            curr_r, bit_r, 
             $itor(input_value_r) / 65536.0, 
             $itor(cos_chart_value[95:48]), 
             $itor(left_point_r[95:48]) / 4294967296.0, $itor(left_point_r[47:0]) / 4294967296.0, 
