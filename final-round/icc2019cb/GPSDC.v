@@ -142,7 +142,7 @@ module CosInterpolate (
                 mul_in1_r <= 65'(signed'(left_point_r[47:0])); // Q16.32 -> Q32.32
                 mul_in2_r <= 65'(signed'(cos_chart_value[95:48])) - 65'(signed'(left_point_r[95:48])); // Q32.32
                 right_point_r <= cos_chart_value;
-                $strobe("x1-x0=%.0f", (65'(signed'(cos_chart_value[95:48])) - 65'(signed'(left_point_r[95:48]))) / 4294967296.0);
+                $strobe("x1-x0=%.9f", (65'(signed'(cos_chart_value[95:48])) - 65'(signed'(left_point_r[95:48]))) / 4294967296.0);
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out; // Q64.64
                 // (x - x0) * (y1 - y0)
