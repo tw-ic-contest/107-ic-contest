@@ -354,7 +354,7 @@ reg [64:0] mul_b_main;
 CosInterpolate _cos(.clk(clk), .start(cos_find_start), .done(cos_done),  
     .mul_in1(mul_a_cos), .mul_in2(mul_b_cos), .mul_out(mul_o),
     .cos_chart_address(COS_ADDR), .cos_chart_value(COS_DATA), 
-    .input_value(COS_INPUT), .cos_interpolate_value(COS_FOUND), .reset(reset_n)
+    .input_value(COS_INPUT), .cos_interpolate_value(COS_FOUND), .reset(~reset_n)
 );
 
 AsinInterpolate _asin(.clk(clk), .start(asin_find_start), .done(asin_done),  
@@ -390,6 +390,7 @@ always @(posedge clk or negedge reset_n) begin
         state <= nextstate;
         
         case(state)
+        
         IDLE0: begin 
             Valid <= 1'b0;
             if (DEN) begin
