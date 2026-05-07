@@ -352,7 +352,7 @@ wire signed [40:0] dif_lambda_rad_div2;
 reg [80:0] sinsquare_phi; //16.64
 reg [80:0] sinsquare_lambda;
 
-reg [:0] RHS;
+reg [160:0] RHS;
 
 reg [63:0] asin_a;
 
