@@ -521,11 +521,13 @@ always @(posedge clk or negedge reset_n) begin
                 step <= step + 1;
             end
             3'd1:begin
+                $display("cosphia * cosphib = %.18f", $itor($signed(mul_o[64:0])) / 18446744073709551616.0);
                 mul_a_main <= mul_o[64:0]; // Q0.64
                 mul_b_main <= 65'(signed'(sinsquare_lambda)); //Q16.32
                 step <= step + 1;
             end
             3'd2:begin
+                $display("cosphia * cosphib * sinsquare_lambda = %.18f", $itor($signed(mul_o[64:0])) / 18446744073709551616.0);
                 RHS <= mul_o[96:0]; // Q0.96
                 step <= 3'd0;
             end
