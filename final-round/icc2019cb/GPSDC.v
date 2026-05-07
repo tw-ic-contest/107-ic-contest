@@ -172,7 +172,7 @@ module CosInterpolate (
             end else if (state_r == S_DONE) begin
                 `ifdef DEBUG
                 $strobe("cos_interpolate_value=%.9f", $itor($signed(cos_interpolate_value)) / 4294967296.0);
-                $strobe("-----end finding cos-----")
+                $strobe("-----end finding cos-----");
                 `endif
             end
             state_r <= next_state_r;
@@ -262,7 +262,7 @@ module AsinInterpolate (
                 // interpolate
                 // y0 * (x1 - x0)
                 mul_in1_r <= 65'(signed'(left_point_r[63:0]));
-                mul_in2_r <= 65'(signed'(asin_chart_value[127:64] - left_point_r[127:64]));
+                mul_in2_r <= 65'(signed'(asin_chart_value[127:64])) - 65'(signed'(left_point_r[127:64]));
                 right_point_r <= asin_chart_value;
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out;
