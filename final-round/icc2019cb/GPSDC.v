@@ -286,18 +286,18 @@ output reg [63:0]  a; //0.64
 parameter rad = 16'h477; //0.16
 parameter R = 12756274;
 
-reg [2:0] state;
-reg [2:0] nextstate;
+reg [3:0] state;
+reg [3:0] nextstate;
 
-localparam IDLE0 = 3'd0;
-localparam FINDCOSA = 3'd1;
-localparam IDLE = 3'd2;
-localparam FINDCOSB1 = 3'd3;
-localparam FINDCOSB2 = 3'd8;
-localparam FINDA = 3'd5;
-localparam FINDASIN = 3'd6;
-localparam FINDD = 3'd7;
-localparam OUTPUT = 3'd8;
+localparam IDLE0 = 4'd0;
+localparam FINDCOSA = 4'd1;
+localparam IDLE = 4'd2;
+localparam FINDCOSB1 = 4'd3;
+localparam FINDCOSB2 = 4'd8;
+localparam FINDA = 4'd5;
+localparam FINDASIN = 4'd6;
+localparam FINDD = 4'd7;
+localparam OUTPUT = 4'd8;
 
 reg [23:0] phi_a;
 reg [23:0] phi_b;
