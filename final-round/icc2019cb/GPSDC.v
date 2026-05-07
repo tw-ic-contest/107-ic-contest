@@ -154,7 +154,7 @@ endmodule
 module AsinInterpolate (
     input wire clk, 
     input wire start,
-    output wire done,  
+    output reg done,  
 
     output reg [64:0]mul_in1, 
     output reg [64:0]mul_in2, 
@@ -254,12 +254,12 @@ input              DEN;
 input      [23:0]  LAT_IN; //8.16
 input      [23:0]  LON_IN; //8.16
 input      [95:0]  COS_DATA; //16.32(x) + 16.32(cosx)
-output     [6:0]   COS_ADDR;
+output reg [6:0]   COS_ADDR;
 input      [127:0] ASIN_DATA; //0.64(x) + 0.64(arcsin(sqrt(x)))
-output     [5:0]   ASIN_ADDR;
-output             Valid;
+output reg [5:0]   ASIN_ADDR;
+output reg         Valid;
 output reg [39:0]  D; //8.32
-output     [63:0]  a; //0.64
+output reg [63:0]  a; //0.64
 
 parameter rad = 16'h477; //0.16
 parameter R = 12756274;
