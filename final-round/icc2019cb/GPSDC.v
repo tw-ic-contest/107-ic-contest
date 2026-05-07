@@ -100,7 +100,6 @@ module CosInterpolate (
     `ifdef DEBUG
     always @(posedge clk) begin
         if (state_r != S_IDLE) begin
-            $strobe("-----Start Finding Cos-----");
             $strobe("CosInterpolate [%0t] state=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
                 $time, state_r, 
                 curr_r, bit_r, 
@@ -172,7 +171,6 @@ module CosInterpolate (
             end else if (state_r == S_DONE) begin
                 `ifdef DEBUG
                 $strobe("cos_interpolate_value=%.9f", $itor($signed(cos_interpolate_value)) / 4294967296.0);
-                $strobe("-----end finding cos-----");
                 `endif
             end
             state_r <= next_state_r;
@@ -263,6 +261,9 @@ module AsinInterpolate (
                 // y0 * (x1 - x0)
                 mul_in1_r <= 65'(signed'(left_point_r[63:0]));
                 mul_in2_r <= 65'(signed'(asin_chart_value[127:64])) - 65'(signed'(left_point_r[127:64]));
+                `ifdef DEBUG
+                $strobe("x1-x0=%.18f", (65'(signed'(asin_chart_value[127:64])) - 65'(signed'(left_point_r[127:64]))) / 4294967296.0);
+                `endif
                 right_point_r <= asin_chart_value;
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out;
@@ -439,6 +440,8 @@ always @(posedge clk or negedge reset_n) begin
 
                 COS_INPUT <= LAT_IN;  //LAT_IN go inside findcos
                 cos_find_start <= 1'b1;
+                $strobe("-----Start Finding Cos-----");
+
             end
         end
 
@@ -447,6 +450,7 @@ always @(posedge clk or negedge reset_n) begin
             cos_find_start <= 1'b0;
             if (cos_done) begin
                 cos_phi_a <= COS_FOUND;
+                $strobe("-----end finding cos-----");                
             end
         end
 
@@ -459,6 +463,7 @@ always @(posedge clk or negedge reset_n) begin
                 lambda_b <= LON_IN;
                 COS_INPUT <= LAT_IN; //LAT_IN go inside findcos
                 cos_find_start <= 1'b1;
+                $strobe("-----Start Finding Cos-----");                
                 step <= 3'd0;
             end
         end
@@ -504,6 +509,7 @@ always @(posedge clk or negedge reset_n) begin
             if (cos_done) begin
                 cos_phi_b <= COS_FOUND;
                 step <= 3'd0;
+                $strobe("-----end finding cos-----");
             end
         end
 
