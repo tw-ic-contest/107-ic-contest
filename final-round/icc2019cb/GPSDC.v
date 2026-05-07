@@ -99,12 +99,12 @@ module CosInterpolate (
 
     `ifdef DEBUG
     always @(posedge clk) begin
-        $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value=%f input_value_r=%f left_point_r=%f right_point_r%f",
+        $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value_r=%f x=%f left_x=%f left_cos_x=%f right_x=%f right_cos_x=%f",
             $time, state_r, next_state_r, 
-            curr_r, bit_r, $itor(input_value) / 65536.0, 
             $itor(input_value_r) / 65536.0, 
-            $itor(left_point_r[95:48]) / 4294967296.0, 
-            $itor(right_point_r[95:48]) / 4294967296.0
+            $itor(cos_chart_value[95:48]), 
+            $itor(left_point_r[95:48]) / 4294967296.0, $itor(left_point_r[47:0]) / 4294967296.0, 
+            $itor(right_point_r[95:48]) / 4294967296.0, $itor(right_point_r[47:0]) / 4294967296.0
         );
     end
     `endif
@@ -627,14 +627,16 @@ end
 
 `ifdef DEBUG
 always @(posedge clk) begin
-    $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b step=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f",
-            $time, state, nextstate, DEN, Valid, step,
-            cos_find_start, cos_done,
-            asin_find_start, asin_done, mul_a, mul_b, 
-            $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0
-    );
-end
 
+    if (state != FINDCOSA && state != FINDCOSB1 || state != FINDCOSB2 || state != FINDASIN) begin
+        $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b step=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f",
+                $time, state, nextstate, DEN, Valid, step,
+                cos_find_start, cos_done,
+                asin_find_start, asin_done, mul_a, mul_b, 
+                $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0
+        );
+    end
+end
 `endif
 
 endmodule
