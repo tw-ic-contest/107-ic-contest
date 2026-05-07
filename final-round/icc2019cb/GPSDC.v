@@ -101,7 +101,7 @@ module CosInterpolate (
     always @(posedge clk) begin
         $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value=%f input_value_r=%f left_point_r=%f right_point_r%f",
             $time, state_r, next_state_r, 
-            curr_r, bit_r, $itor(input_value) / 65536.0
+            curr_r, bit_r, $itor(input_value) / 65536.0, 
             $itor(input_value_r) / 65536.0, $itor(left_point_r) / 65536.0, $itor(right_point_r) / 65536.0
         );
     end
