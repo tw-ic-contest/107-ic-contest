@@ -97,7 +97,7 @@ module CosInterpolate (
     wire div_done;
     SeqDiv div(.clk(clk), .rst(reset), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
 
-    /*`ifdef DEBUG
+    `ifdef DEBUG
     always @(posedge clk) begin
         $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value=%f input_value_r=%f left_point_r=%f right_point_r%f",
             $time, state_r, next_state_r, 
@@ -107,7 +107,7 @@ module CosInterpolate (
             $itor(right_point_r[95:48]) / 4294967296.0
         );
     end
-    `endif*/
+    `endif
 
     /*`ifdef DEBUG
     always @(posedge clk) begin
