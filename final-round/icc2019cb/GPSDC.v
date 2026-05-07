@@ -103,7 +103,7 @@ module CosInterpolate (
             $time, state_r, 
             curr_r, bit_r, 
             $itor(input_value_r) / 65536.0, 
-            $itor(cos_chart_value[95:48]), 
+            $itor(cos_chart_value[95:48]) / 4294967296.0, 
             $itor(left_point_r[95:48]) / 4294967296.0, $itor(left_point_r[47:0]) / 4294967296.0, 
             $itor(right_point_r[95:48]) / 4294967296.0, $itor(right_point_r[47:0]) / 4294967296.0
         );
@@ -629,7 +629,7 @@ end
 `ifdef DEBUG
 always @(posedge clk) begin
 
-    if (state != FINDCOSA && state != FINDCOSB1 || state != FINDCOSB2 || state != FINDASIN) begin
+    if (state != FINDCOSA && state != FINDCOSB1 && state != FINDCOSB2 && state != FINDASIN) begin
         $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b step=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f",
                 $time, state, nextstate, DEN, Valid, step,
                 cos_find_start, cos_done,
