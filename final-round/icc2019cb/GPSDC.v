@@ -211,7 +211,7 @@ module AsinInterpolate (
             // (x - x0) * (y1 - y0)
             mul_in1_r <= 65'(signed'(input_value - left_point_r[63:0]));
             mul_in2_r <= 65'(signed'(right_point_r[127:64] - left_point_r[127:64]));
-        end else if (state == S_DIV) begin
+        end else if (state_r == S_DIV) begin
             div_num_r <= 128'(signed'(mul_out1_r + mul_out));
             div_den_r <= 128'(signed'(right_point_r[63:0] - left_point_r[63:0]));
             div_start_r <= 1'b1;
@@ -295,6 +295,9 @@ reg [47:0] sinsquare_phi;
 reg [47:0] sinsquare_lambda;
 
 reg [47:0] RHS;
+
+reg [63:0] asin_a;
+
 
 
 assign dif_phi = $signed({1'b0, phi_b}) - $signed({1'b0, phi_a});
@@ -467,6 +470,7 @@ always @(posedge clk or negedge reset_n) begin
 
         OUTPUT:begin
             Valid <= 1'b1;
+            flag <= 0;
         end
         endcase
     end
