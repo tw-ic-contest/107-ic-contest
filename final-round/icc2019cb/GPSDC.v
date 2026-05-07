@@ -654,11 +654,11 @@ end
 always @(posedge clk) begin
 
     if (state != FINDCOSA && state != FINDCOSB1 && state != FINDCOSB2 && state != FINDASIN) begin
-        $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b step=%0d cos_start=%b cos_done=%b asin_start=%b asin_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f",
+        $strobe("[%0t] state=%0d next=%0d DEN=%b Valid=%b step=%0d cos_start=%b cos_done=%b mula=%f mulb=%f LAT_IN=%f LON_IN=%f phia=%f phib=%f",
                 $time, state, nextstate, DEN, Valid, step,
                 cos_find_start, cos_done,
-                asin_find_start, asin_done, mul_a, mul_b, 
-                $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0
+                mul_a, mul_b, 
+                $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0, $itor(phi_b) / 65536.0
         );
 
         $strobe("[%0t] cos_phi_a=%.9f cos_phi_b=%.9f sinsquare_phi=%.9f sinsquare_lambda=%.9f a=%.18f D=%.9f",
