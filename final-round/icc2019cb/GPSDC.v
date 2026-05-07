@@ -658,7 +658,7 @@ always @(posedge clk) begin
                 $itor(LAT_IN) / 65536.0, $itor(LON_IN) / 65536.0, $itor(phi_a) / 65536.0
         );
 
-        $strobe("[%0t] cos_phi_a=%.9f cos_phi_b=%.9f sinsquare_phi=%.9f sinsquare_lambda=%.9f a=%.18f D=%.9f"
+        $strobe("[%0t] cos_phi_a=%.9f cos_phi_b=%.9f sinsquare_phi=%.9f sinsquare_lambda=%.9f a=%.18f D=%.9f",
                 $time, $itor($signed(cos_phi_a))/4294967296.0, $itor($signed(cos_phi_b))/4294967296.0,
                 $itor($signed(sinsquare_phi))/4294967296.0, $itor($signed(sinsquare_lambda))/4294967296.0,
                 $itor($signed(a))/18446744073709551616.0,  $itor($signed(D))/4294967296.0
