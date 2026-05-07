@@ -75,12 +75,12 @@ module CosInterpolate (
 );  
     localparam S_IDLE = 3'b000;
     localparam S_SEARCH = 3'b001;
-    localparam S_STORE_LEFT = 3'b110;
-    localparam S_MUL_A = 3'b010;
-    localparam S_MUL_B = 3'b011;
-    localparam S_DIV = 3'b100; 
-    localparam S_DIV_WAIT = 3'b111;
-    localparam S_DONE = 3'b101;
+    localparam S_STORE_LEFT = 3'b010;
+    localparam S_MUL_A = 3'b011;
+    localparam S_MUL_B = 3'b100;
+    localparam S_DIV = 3'b101; 
+    localparam S_DIV_WAIT = 3'b110;
+    localparam S_DONE = 3'b111;
 
     reg [2:0] state_r, next_state_r;
 
@@ -102,7 +102,7 @@ module CosInterpolate (
         $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value=%f input_value_r=%f left_point_r=%f right_point_r%f",
             $time, state_r, next_state_r, 
             curr_r, bit_r, $itor(input_value) / 65536.0, 
-            $itor(input_value_r) / 65536.0, $itor(left_point_r) / 65536.0, $itor(right_point_r) / 65536.0
+            $itor(input_value_r) / 65536.0, $itor(left_point_r) / 4294967296.0, $itor(right_point_r) / 4294967296.0
         );
     end
     `endif
