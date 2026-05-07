@@ -17,7 +17,7 @@ set_fix_multiple_port_nets -all -buffer_constants [get_designs *]
 compile
 
 write -format ddc     -hierarchy -output "GPSDC_syn.ddc"
-write_sdf -version 1.0  geofence_syn.sdf
+write_sdf -version 1.0  GPSDC_syn.sdf
 write -format verilog -hierarchy -output GPSDC_syn.v
 report_area > area.log
 report_timing > timing.log
