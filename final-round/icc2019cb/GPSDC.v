@@ -364,7 +364,7 @@ assign dif_lambda = $signed({1'b0, lambda_b}) - $signed({1'b0, lambda_a});
 assign dif_phi_rad_div2 = dif_phi_rad >>> 1; //Q8.32
 assign dif_lambda_rad_div2 = dif_lambda_rad >>> 1;
 
-assign a = sinsquare_phi + RHS;
+assign a = sinsquare_phi[63:0] + RHS[63:0];
 
 reg [2:0] step;
 
@@ -516,17 +516,17 @@ always @(posedge clk or negedge reset_n) begin
             case(step)
 
             3'd0:begin
-                mul_a_main <= cos_phi_a;
-                mul_b_main <= cos_phi_b;
+                mul_a_main <= 65'signed'cos_phi_a; // Q16.32
+                mul_b_main <= 65'signed'cos_phi_b; // Q16.32
                 step <= step + 1;
             end
             3'd1:begin
-                mul_a_main <= mul_o;
-                mul_b_main <= sinsquare_lambda;
+                mul_a_main <= mul_o[96:32]; // Q16.32
+                mul_b_main <= 65'signed'sinsquare_lambda; //Q16.32
                 step <= step + 1;
             end
             3'd2:begin
-                RHS <= mul_o;
+                RHS <= mul_o[96:0];
                 step <= 3'd0;
             end
             endcase
