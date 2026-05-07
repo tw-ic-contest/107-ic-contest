@@ -1,7 +1,7 @@
 sh mkdir -p Report
 set DESIGN "GPSDC"
 #Read All Files
-read_file -format verilog  GPSDC.v
+read_file -format sverilog  GPSDC.v
 #read_file -format sverilog  GPSDC.v
 current_design GPSDC
 link
