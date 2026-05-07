@@ -142,22 +142,28 @@ module CosInterpolate (
                 mul_in1_r <= 65'(signed'(left_point_r[47:0])); // Q16.32 -> Q32.32
                 mul_in2_r <= 65'(signed'(cos_chart_value[95:48])) - 65'(signed'(left_point_r[95:48])); // Q32.32
                 right_point_r <= cos_chart_value;
+                `define DEBUG
                 $strobe("x1-x0=%.9f", (65'(signed'(cos_chart_value[95:48])) - 65'(signed'(left_point_r[95:48]))) / 4294967296.0);
+                `endif
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out; // Q64.64
                 // (x - x0) * (y1 - y0)
                 mul_in1_r <= 65'(signed'((input_value <<< 16))) - 65'(signed'(left_point_r[95:48])); // Q32.32
                 mul_in2_r <= 65'(signed'(right_point_r[47:0])) - 65'(signed'(left_point_r[47:0])); // Q32.32
+                `define DEBUG
                 $strobe("y0(x1-x0)=%.18f", $itor($signed(mul_out1_r)) / 18446744073709551616.0);
                 $strobe("x-x0=%.9f", (65'(signed'((input_value <<< 16))) - 65'(signed'(left_point_r[95:48]))) / 4294967296.0);
                 $strobe("y1-y0=%.9f", (65'(signed'(right_point_r[47:0])) - 65'(signed'(left_point_r[47:0]))) / 4294967296.0);
+                `endif
             end else if (state_r == S_DIV) begin
                 div_den_r <= 128'(signed'(right_point_r[95:48])) - 128'(signed'(left_point_r[95:48]));
                 div_num_r <= 128'(signed'(mul_out1_r)) + 128'(signed'(mul_out));
                 div_start_r <= 1'b1;
+                `define DEBUG
                 $strobe("y0(x1-x0)=%.18f", $itor($signed(mul_out)) / 18446744073709551616.0);
                 $strobe("x1-x0=%.9f", (128'(signed'(right_point_r[47:0])) - 128'(signed'(left_point_r[47:0]))) / 4294967296.0);
                 $strobe("y0(x1-x0)+(x-x0)(y1-y0)=%.9f", ((128'(signed'(mul_out1_r)) + 128'(signed'(mul_out))) >>> 32) / 4294967296.0);
+                `endif
             end else if (state_r == S_DIV_WAIT) begin
                 div_start_r <= 1'b0;
             end
@@ -433,6 +439,9 @@ always @(posedge clk or negedge reset_n) begin
             cos_find_start <= 1'b0;
             if (cos_done) begin
                 cos_phi_a <= COS_FOUND;
+                `ifdef DEBUG
+                $strobe("COS_FOUND=%.9f", $itor($signed(COS_FOUND)) / 4294967296.0);
+                `endif
             end
         end
 
