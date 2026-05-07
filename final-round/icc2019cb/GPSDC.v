@@ -97,7 +97,7 @@ module CosInterpolate (
     wire div_done;
     SeqDiv div(.clk(clk), .rst(reset), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
 
-    `ifdef DEBUG
+    /*`ifdef DEBUG
     always @(posedge clk) begin
         $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value=%f input_value_r=%f left_point_r=%f right_point_r%f",
             $time, state_r, next_state_r, 
@@ -107,7 +107,7 @@ module CosInterpolate (
             $itor(right_point_r[95:48]) / 4294967296.0
         );
     end
-    `endif
+    `endif*/
 
     /*`ifdef DEBUG
     always @(posedge clk) begin
@@ -144,8 +144,8 @@ module CosInterpolate (
             end else if (state_r == S_MUL_B) begin
                 mul_out1_r <= mul_out;
                 // (x - x0) * (y1 - y0)
-                mul_in1_r <= 65'(signed'(input_value - left_point_r[47:0]));
-                mul_in2_r <= 65'(signed'(right_point_r[95:48] - left_point_r[95:48]));
+                mul_in1_r <= 65'(signed'(input_value - left_point_r[95:48]));
+                mul_in2_r <= 65'(signed'(right_point_r[47:0] - left_point_r[47:0]));
             end else if (state_r == S_DIV) begin
                 div_num_r <= 128'(signed'(right_point_r[47:0] - left_point_r[47:0]));
                 div_den_r <= 128'(signed'(mul_out1_r + mul_out));
@@ -198,12 +198,12 @@ module AsinInterpolate (
 );  
     localparam S_IDLE = 3'b000;
     localparam S_SEARCH = 3'b001;
-    localparam S_STORE_LEFT = 3'b110;
-    localparam S_MUL_A = 3'b010;
-    localparam S_MUL_B = 3'b011;
-    localparam S_DIV = 3'b100; 
-    localparam S_DIV_WAIT = 3'b111;
-    localparam S_DONE = 3'b101;
+    localparam S_STORE_LEFT = 3'b010;
+    localparam S_MUL_A = 3'b011;
+    localparam S_MUL_B = 3'b100;
+    localparam S_DIV = 3'b101; 
+    localparam S_DIV_WAIT = 3'b110;
+    localparam S_DONE = 3'b111;
     reg [2:0] state_r, next_state_r;
 
     reg [5:0]curr_r, bit_r;
@@ -219,37 +219,43 @@ module AsinInterpolate (
     wire div_done;
     SeqDiv _div(.clk(clk), .rst(reset), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
 
-    always @(posedge clk) begin
-        if (state_r == S_IDLE) begin
-            input_value_r <= input_value;
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            state_r <= S_IDLE;
             curr_r <= 6'b100000;
             bit_r <= 6'b100000;
-        end else if (state_r == S_SEARCH) begin
-            // binary serach
-            curr_r <= (input_value < asin_chart_value[127:64]) ? ((curr_r ^ bit_r) | (bit_r >> 1)) : (curr_r | (bit_r >> 1));
-            bit_r <= bit_r >> 1;
-        end else if (state_r == S_STORE_LEFT) begin
-            left_point_r <= asin_chart_value;
-            curr_r <= curr_r + 1;
-        end else if (state_r == S_MUL_A) begin
-            // interpolate
-            // y0 * (x1 - x0)
-            mul_in1_r <= 65'(signed'(left_point_r[63:0]));
-            mul_in2_r <= 65'(signed'(asin_chart_value[127:64] - left_point_r[127:64]));
-            right_point_r <= asin_chart_value;
-        end else if (state_r == S_MUL_B) begin
-            mul_out1_r <= mul_out;
-            // (x - x0) * (y1 - y0)
-            mul_in1_r <= 65'(signed'(input_value - left_point_r[63:0]));
-            mul_in2_r <= 65'(signed'(right_point_r[127:64] - left_point_r[127:64]));
-        end else if (state_r == S_DIV) begin
-            div_num_r <= 128'(signed'(right_point_r[63:0] - left_point_r[63:0]));
-            div_den_r <= 128'(signed'(mul_out1_r + mul_out));
-            div_start_r <= 1'b1;
-        end else if (state_r == S_DIV_WAIT) begin
-            div_start_r <= 1'b0;
+        end else begin
+            if (state_r == S_IDLE) begin
+                input_value_r <= input_value;
+                curr_r <= 6'b100000;
+                bit_r <= 6'b100000;
+            end else if (state_r == S_SEARCH) begin
+                // binary serach
+                curr_r <= (input_value < asin_chart_value[127:64]) ? ((curr_r ^ bit_r) | (bit_r >> 1)) : (curr_r | (bit_r >> 1));
+                bit_r <= bit_r >> 1;
+            end else if (state_r == S_STORE_LEFT) begin
+                left_point_r <= asin_chart_value;
+                curr_r <= curr_r + 1;
+            end else if (state_r == S_MUL_A) begin
+                // interpolate
+                // y0 * (x1 - x0)
+                mul_in1_r <= 65'(signed'(left_point_r[63:0]));
+                mul_in2_r <= 65'(signed'(asin_chart_value[127:64] - left_point_r[127:64]));
+                right_point_r <= asin_chart_value;
+            end else if (state_r == S_MUL_B) begin
+                mul_out1_r <= mul_out;
+                // (x - x0) * (y1 - y0)
+                mul_in1_r <= 65'(signed'(input_value - left_point_r[127:64]));
+                mul_in2_r <= 65'(signed'(right_point_r[63:0] - left_point_r[63:0]));
+            end else if (state_r == S_DIV) begin
+                div_num_r <= 128'(signed'(right_point_r[63:0] - left_point_r[63:0]));
+                div_den_r <= 128'(signed'(mul_out1_r + mul_out));
+                div_start_r <= 1'b1;
+            end else if (state_r == S_DIV_WAIT) begin
+                div_start_r <= 1'b0;
+            end
+            state_r <= next_state_r;
         end
-        state_r <= next_state_r;
     end
     always @(*) begin
         next_state_r = state_r;
