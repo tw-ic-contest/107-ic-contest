@@ -549,7 +549,7 @@ always @(*) begin
         end
         IDLE: begin
             if (DEN)
-                nextstate = FINDCOSB;
+                nextstate = FINDCOSB1;
             else
                 nextstate = IDLE;
         end
