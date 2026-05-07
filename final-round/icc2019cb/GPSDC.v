@@ -329,8 +329,8 @@ wire [64:0] mul_b_cos;
 wire [64:0] mul_a_asin;
 wire [64:0] mul_b_asin;
 
-wire [64:0] mul_a_main;
-wire [64:0] mul_b_main;
+reg [64:0] mul_a_main;
+reg [64:0] mul_b_main;
 
 CosInterpolate _cos(.clk(clk), .start(cos_find_start), .done(cos_done),  
     .mul_in1(mul_a_cos), .mul_in2(mul_b_cos), .mul_out(mul_o),
