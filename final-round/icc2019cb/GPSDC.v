@@ -60,17 +60,17 @@ endmodule
 module CosInterpolate (
     input wire clk, 
     input wire start,
-    output wire done,  
+    output reg done,  
 
-    output wire [64:0]mul_in1, 
-    output wire [64:0]mul_in2, 
+    output reg [64:0]mul_in1, 
+    output reg [64:0]mul_in2, 
     input wire [128:0]mul_out,
 
-    output wire [6:0]cos_chart_address, 
+    output reg [6:0]cos_chart_address, 
     input wire [95:0]cos_chart_value, 
 
     input wire[47:0]input_value, 
-    output wire [47:0]cos_interpolate_value
+    output reg [47:0]cos_interpolate_value
 );  
     localparam S_IDLE = 3'b000;
     localparam S_SEARCH = 3'b001;
@@ -80,6 +80,7 @@ module CosInterpolate (
     localparam S_DIV = 3'b100; 
     localparam S_DIV_WAIT = 3'b111;
     localparam S_DONE = 3'b101;
+
     reg [2:0] state_r, next_state_r;
 
     reg [6:0]curr_r, bit_r;
@@ -155,15 +156,15 @@ module AsinInterpolate (
     input wire start,
     output wire done,  
 
-    output wire [64:0]mul_in1, 
-    output wire [64:0]mul_in2, 
+    output reg [64:0]mul_in1, 
+    output reg [64:0]mul_in2, 
     input wire [128:0]mul_out,
 
-    output wire [5:0]asin_chart_address, 
+    output reg [5:0]asin_chart_address, 
     input wire [127:0]asin_chart_value, 
 
     input wire[63:0]input_value, 
-    output wire [63:0]asin_interpolate_value
+    output reg [63:0]asin_interpolate_value
 );  
     localparam S_IDLE = 3'b000;
     localparam S_SEARCH = 3'b001;
