@@ -516,13 +516,13 @@ always @(posedge clk or negedge reset_n) begin
             case(step)
 
             3'd0:begin
-                mul_a_main <= 65'signed'cos_phi_a; // Q16.32
-                mul_b_main <= 65'signed'cos_phi_b; // Q16.32
+                mul_a_main <= 65'(signed'(cos_phi_a)); // Q16.32
+                mul_b_main <= 65'(signed'(cos_phi_b)); // Q16.32
                 step <= step + 1;
             end
             3'd1:begin
                 mul_a_main <= mul_o[96:32]; // Q16.32
-                mul_b_main <= 65'signed'sinsquare_lambda; //Q16.32
+                mul_b_main <= 65'(signed'(sinsquare_lambda)); //Q16.32
                 step <= step + 1;
             end
             3'd2:begin
