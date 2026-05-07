@@ -99,9 +99,9 @@ module CosInterpolate (
 
     `ifdef DEBUG
     always @(posedge clk) begin
-        $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value_r=%f left_point_r=%f right_point_r%f",
+        $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value=%f input_value_r=%f left_point_r=%f right_point_r%f",
             $time, state_r, next_state_r, 
-            curr_r, bit_r, 
+            curr_r, bit_r, $itor(input_value) / 65536.0
             $itor(input_value_r) / 65536.0, $itor(left_point_r) / 65536.0, $itor(right_point_r) / 65536.0
         );
     end
@@ -407,7 +407,7 @@ always @(posedge clk or negedge reset_n) begin
                 COS_INPUT <= LAT_IN;  //LAT_IN go inside findcos
                 cos_find_start <= 1'b1;
                 
-                flag <= flag +1;
+                flag <= flag + 1;
             end
             
             1'b1: begin
@@ -422,6 +422,7 @@ always @(posedge clk or negedge reset_n) begin
 
         IDLE: begin
             Valid <= 1'b0;
+            flag <= 1'b0;
 
             if (DEN) begin
                 phi_b <= LAT_IN;
