@@ -55,7 +55,7 @@ module SeqDiv (
         end
     end
     `ifdef DEBUG
-    always @(posedge) begin
+    always @(posedge clk) begin
         $strobe("DIV t=%0t state=%0d div_start=%b div_done=%b count=%0d den=%0d num=%0d",
             $time, state_r, div_start_r, div_done,
             div.count, div_den_r, div_num_r
