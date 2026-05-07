@@ -54,6 +54,14 @@ module SeqDiv (
             end
         end
     end
+    `ifdef DEBUG
+    always @(posedge) begin
+        $strobe("DIV t=%0t state=%0d div_start=%b div_done=%b count=%0d den=%0d num=%0d",
+            $time, state_r, div_start_r, div_done,
+            div.count, div_den_r, div_num_r
+        );
+    end
+    `endif
 endmodule
 
 
@@ -92,17 +100,19 @@ module CosInterpolate (
     reg [95:0] left_point_r, right_point_r;
 
     reg div_rst_r, div_start_r;
-    reg [47:0]div_num_r, div_den_r;
-    wire [47:0]div_quo;
+    reg [128:0]div_num_r, div_den_r;
+    wire [128:0]div_quo;
     wire div_done;
-    SeqDiv div(.clk(clk), .rst(div_rst_r), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
+    SeqDiv div(.clk(clk), .rst(reset), .start(div_start_r), .num(div_num_r), .den(div_den_r), .quo(div_quo), .done(div_done));
 
     `ifdef DEBUG
     always @(posedge clk) begin
         $strobe("CosInterpolate [%0t] state=%0d next=%0d curr_r=%0d bit_r=%0d input_value=%f input_value_r=%f left_point_r=%f right_point_r%f",
             $time, state_r, next_state_r, 
             curr_r, bit_r, $itor(input_value) / 65536.0, 
-            $itor(input_value_r) / 65536.0, $itor(left_point_r) / 4294967296.0, $itor(right_point_r) / 4294967296.0
+            $itor(input_value_r) / 65536.0, 
+            $itor(left_point_r[95:48]) / 4294967296.0, 
+            $itor(right_point_r[95:48]) / 4294967296.0
         );
     end
     `endif
@@ -112,6 +122,16 @@ module CosInterpolate (
             state_r <= S_IDLE;
             curr_r <= 7'b1000000;
             bit_r <= 7'b1000000;
+
+            // div_rst_r <= 1'b1;
+            // div_start_r <= 1'b0;
+            // div_num_r <= 48'd0;
+            // div_den_r <= 48'd0;
+
+            // mul_in1_r <= 65'd0;
+            // mul_in2_r <= 65'd0;
+            // left_point_r <= 96'd0;
+            // right_point_r <= 96'd0;
         end else begin
             if (state_r == S_IDLE) begin
                 input_value_r <= input_value;
@@ -136,8 +156,8 @@ module CosInterpolate (
                 mul_in1_r <= 65'(signed'(input_value - left_point_r[47:0]));
                 mul_in2_r <= 65'(signed'(right_point_r[95:48] - left_point_r[95:48]));
             end else if (state_r == S_DIV) begin
-                div_num_r <= 128'(signed'(mul_out1_r + mul_out));
-                div_den_r <= 128'(signed'(right_point_r[47:0] - left_point_r[47:0]));
+                div_num_r <= 128'(signed'(right_point_r[47:0] - left_point_r[47:0]));
+                div_den_r <= 128'(signed'(mul_out1_r + mul_out));
                 div_start_r <= 1'b1;
             end else if (state_r == S_DIV_WAIT) begin
                 div_start_r <= 1'b0;
